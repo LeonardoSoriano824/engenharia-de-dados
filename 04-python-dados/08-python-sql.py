@@ -55,12 +55,13 @@ resultado = pd.read_sql(
     """
     SELECT
         clientes.cidade,
-        COUNT(vendas.preco) AS quantidade_compras,
-        COALESCE(SUM(vendas.preco), 0) AS faturamento
+        SUM(vendas.preco) AS faturamento
     FROM clientes
     LEFT JOIN vendas
         ON clientes.id = vendas.cliente_id
+    WHERE vendas.preco > 200
     GROUP BY clientes.cidade
+    HAVING faturamento > 1000
     ORDER BY faturamento DESC
     """,
     conexao
