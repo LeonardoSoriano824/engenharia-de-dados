@@ -14,19 +14,33 @@ conexao = sqlite3.connect("clientes.db")
 # ==========================
 
 clientes = pd.DataFrame({
-    "id": [1, 2, 3, 4],
-    "nome": ["Leonardo", "Carlos", "Ana", "Marina"],
-    "idade": [23, 27, 28, 31],
-    "cidade": ["Salvador", "Salvador", "Recife", "São Paulo"]
+    "id": [1, 2, 3, 4, 5],
+    "nome": ["Leonardo", "Carlos", "Ana", "Marina", "João"],
+    "idade": [23, 27, 28, 31, 22],
+    "cidade": ["Salvador", "Salvador", "Recife", "São Paulo", "Salvador"]
+})
+
+vendas = pd.DataFrame({
+    "id": [1, 2, 3, 4, 5],
+    "cliente_id": [1, 2, 1, 3, 4],
+    "produto": ["Notebook", "Mouse", "Teclado", "Monitor", "Fone"],
+    "preco": [3500, 100, 250, 1200, 300]
 })
 
 
 # ==========================
-# 3. SALVANDO OS DADOS NO SQLITE
+# 3. SALVANDO OS DADOS
 # ==========================
 
 clientes.to_sql(
     "clientes",
+    conexao,
+    if_exists="replace",
+    index=False
+)
+
+vendas.to_sql(
+    "vendas",
     conexao,
     if_exists="replace",
     index=False
@@ -39,11 +53,15 @@ clientes.to_sql(
 
 resultado = pd.read_sql(
     """
-    SELECT cidade, COUNT(*) AS quantidade
+    SELECT
+        clientes.cidade,
+        COUNT(vendas.preco) AS quantidade_compras,
+        COALESCE(SUM(vendas.preco), 0) AS faturamento
     FROM clientes
-    GROUP BY cidade
-    ORDER BY quantidade DESC
-    LIMIT 1
+    LEFT JOIN vendas
+        ON clientes.id = vendas.cliente_id
+    GROUP BY clientes.cidade
+    ORDER BY faturamento DESC
     """,
     conexao
 )
